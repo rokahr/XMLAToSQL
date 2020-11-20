@@ -20,12 +20,12 @@ $body = "This HTTP triggered function executed successfully. Pass a name in the 
 
 if ($name) {
     #Dax Query -> outcome needs to match SQL table
-    $Query = "EVALUATE ALL(AGG_Sales[Amount], AGG_Sales[Location])" 
+    $Query = "<yourDax>" 
 
     #Use XMLA to get data. Store it in $Results
     $Connection = New-Object Microsoft.AnalysisServices.AdomdClient.AdomdConnection
     $Results = New-Object System.Data.DataTable
-    $Connection.ConnectionString = "Datasource=asazure://westeurope.asazure.windows.net/srvanalysis;initial catalog=DemoProject;User ID=app:c7c1b553-e6d5-4e08-9ae7-2ee96dc179c7@72f988bf-86f1-41af-91ab-2d7cd011db47;Password=N.FC4sNM7..NXVmf3Z~G5-Vtmz9PSIGl1Z" 
+    $Connection.ConnectionString = "Datasource=<Your Analysis service>;initial catalog=<Your model>;User ID=app:<App_ID>@<Tenant_ID>;Password=>Secret of Service Principal>" 
     $Connection.Open()
     $Adapter = New-Object Microsoft.AnalysisServices.AdomdClient.AdomdDataAdapter $Query ,$Connection
     $Adapter.Fill($Results)
@@ -33,10 +33,10 @@ if ($name) {
     $Connection.Close()
 
     #Connect to Database with SQL User
-    $Database   = 'writeback'
-    $Server     = 'moderndwh.database.windows.net'
-    $UserName   = 'insert_user'
-    $Password   = 'Swissre123456'
+    $Database   = '<Target DB>'
+    $Server     = '<Azure Server address>'
+    $UserName   = '<SQL User with read/write access>'
+    $Password   = '<PW of SQL USer>'
     $connectionString = 'Data Source={0};database={1};User ID={2};Password={3}' -f $Server,$Database,$UserName,$Password
 
     $sqlConnection = New-Object System.Data.SqlClient.SqlConnection $connectionString
@@ -44,12 +44,12 @@ if ($name) {
 
     #Create a bulkinsert object and insert
     $bc = new-object ("System.Data.SqlClient.SqlBulkCopy") $sqlConnection
-    $bc.DestinationTableName = "dbo.AGG_Sales"
+    $bc.DestinationTableName = "dbo.<Table to copy to>"
     $bc.WriteToServer($Results)
 
     #close SQL connection
     $sqlConnection.Close()
-    $body = "Hello, $name. This HTTP triggered function executed successfully."
+    $body = "Hello, $name. This HTTP triggered function executed successfully and read data from AAS and wrote it to SQL."
 }
 
 # Associate values to output bindings by calling 'Push-OutputBinding'.
